@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recetas</title>
+
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+</head>
+<body>
+<div id="root"></div>
+
+<script src="../js/react.development.js"></script>
+<script src="../js/react-dom.development.js"></script>
+
+<script>
+  const root = ReactDOM.createRoot(document.getElementById('root'))
+
+  let ingredients = []
+  let ingredientsNumber = 0
+  const recipes = JSON.parse(localStorage.getItem('recipes')) ?? []
+
+  const addRecipe = (event) => {
+    event.preventDefault()
+
+    const nameRecipe = event.target.nameRecipe.value
+    const timeRecipe = event.target.timeRecipe.value
+
+    const inputFile = document.getElementById('imageRecipe')
+    const file = inputFile.files[0]
+    const reader = new FileReader()
+
+    reader.readAsBinaryString(file)
+
+    reader.onload = function (e) {
+      const image = btoa(reader.result)
+
+      let ingredientsList = ''
+
+      for (let i = 0; i < ingredientsNumber; i++) {
+        ingredientsList += document.getElementById(`ingredient_${i}`).value + ','
+
+        document.getElementById(`ingredient_${i}`).value = ''
+      }
+
+      recipes.push({
+        nameRecipe: nameRecipe,
+        timeRecipe: timeRecipe,
+        ingredients: ingredientsList,
+        imageRecipe: image
+      })
+
+      localStorage.setItem('recipes', JSON.stringify(recipes))
+
+      ingredients = []
+      event.target.nameRecipe.value = ''
+      event.target.timeRecipe.value = ''
+      event.target.imageRecipe.value = ''
+
+      root.render(container())
+    }
+
+  }
+
+  const addIngredients = () => {
+    ingredients.push([])
+
+    ingredientsElements = ingredients.map((input, index) =>
+      React.createElement('input', {
+        type: 'text',
+        name: `ingredient`,
+        id: `ingredient_${index}`,
+        placeholder: `Ingredient ${index}`,
+        className: 'form-control mt-2'
+      })
+    );
+
+    ingredientsNumber++
+    root.render([container()])
+  }
+
+  let ingredientsElements = ingredients.map((input, index) =>
+    React.createElement('input', {
+      type: 'text',
+      name: 'ingredient',
+    })
+  );
+
+  const createForm = () => {
+    return React.createElement('form', {onSubmit: addRecipe}, [
+      React.createElement('input', {
+        type: 'text',
+        name: 'nameRecipe',
+        autoComplete: 'off',
+        placeholder: 'Recipe name',
+        className: 'form-control'
+      }),
+      React.createElement('input', {
+        type: 'text',
+        name: 'timeRecipe',
+        autoComplete: 'off',
+        placeholder: 'Preparation time',
+        className: 'form-control mt-2'
+      }),
+      React.createElement('input', {
+        type: 'file',
+        id: 'imageRecipe',
+        name: 'imageRecipe',
+        placeholder: 'Image',
+        className: 'form-control mt-2',
+        accept: 'image/*'
+      }),
+      ingredientsElements,
+      React.createElement('button', { type: 'button', className: 'btn btn-primary mt-2', onClick: addIngredients }, 'Add ingredient'),
+      React.createElement('button', { type: 'submit', className: 'btn btn-success mt-2 mx-2' }, 'Save recipe'),
+    ])
+  }
+
+  const card = () => {
+    return React.createElement('div', {
+        className: 'card mb-3',
+      },
+      [
+        React.createElement('div', {
+          className: 'card-header'
+        }, 'Recipe list'),
+        React.createElement('div', {
+          className: 'card-body'
+        }, [
+            React.createElement('div', {className: 'row'},
+                React.createElement('div', {className: 'col-md-6'}, createForm()),
+                React.createElement('div', {className: 'col-md-6'}, createList())
+            )
+          ]
+        )
+      ])
+  }
+
+  const container = () => {
+    return React.createElement('div',
+      {
+        className: 'container-fluid'
+      }, [card()])
+  }
+
+  const createList = () => {
+    return React.createElement('ul', {className: 'list-group'}, recipes.map((value, key) => {
+      const ingredients = value.ingredients.split(',')
+
+      return React.createElement('li', {key: key, className: 'list-group-item'},
+        React.createElement('div', null, [
+            React.createElement('img', {src: `data:image/*;base64,${value.imageRecipe}`, style: {width: '100px', height: '100px'}}, null),
+            React.createElement('ul', null, [
+            `Recipe name: ${value.nameRecipe}`,
+             React.createElement('br'),
+            `Preparation time: ${value.timeRecipe}`,
+            React.createElement('br'),
+            'Ingredients:',
+            ingredients.map((value, key) => {
+              if (value !== '')
+                return React.createElement('li', {key: key }, value)
+            })
+          ])
+          ]
+        )
+      )
+    }))
+  }
+
+  root.render(container())
+</script>
+</body>
+</html>
